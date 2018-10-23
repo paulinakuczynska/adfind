@@ -107,6 +107,6 @@ class EntityTestController extends AbstractController
         $entityManager->persist($mapformat);
         $entityManager->flush();
 
-        return new Response('Mapformat ready');
+        return new Response('Mapformat ready!');
     }
 }
