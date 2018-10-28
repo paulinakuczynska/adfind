@@ -3,12 +3,13 @@
 namespace App\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Tag
  *
- * @ORM\Table(name="Tag")
+ * @ORM\Table(name="Tag", uniqueConstraints={@ORM\UniqueConstraint(name="name", columns={"name"})})
  * @ORM\Entity
  */
 class Tag
@@ -16,7 +17,7 @@ class Tag
     /**
      * @var int
      *
-     * @ORM\Column(name="id", type="integer", nullable=false)
+     * @ORM\Column(name="id", type="integer", nullable=false, options={"unsigned"=true})
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
@@ -24,19 +25,19 @@ class Tag
 
     /**
      * @var string
-     * @ORM\Column(name="name", type="string", length=255, nullable=false)
+     * @ORM\Column(name="name", type="string", length=30, nullable=false)
      */
     private $name;
 
     /**
-     * @var \Maptag
-     * @ORM\OneToMany(targetEntity="App\Entity\Maptag", mappedBy="tag", cascade={"persist", "remove"}, orphanRemoval=TRUE)
+     * @var \File
+     * @ManyToMany(targetEntity="App\Entity\File", mappedBy="tags", fetch="EXTRA_LAZY")
      */
-    private $maptags;
+    private $files;
 
     public function __construct()
     {
-        $this->maptags = new ArrayCollection();
+        $this->files = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -49,19 +50,9 @@ class Tag
         return $this->name;
     }
 
-    public function getMapTags(): Collection
+    public function getFiles(): Collection
     {
-        return $this->maptags;
-    }
-
-    public function getFiles()
-    {
-        return array_map(
-            function ($maptag) {
-                return $maptag->getFiles();
-            },
-            $this->maptags->toArray()
-        );
+        return $this->files;
     }
 
     public function setName(string $name): self
@@ -71,24 +62,22 @@ class Tag
         return $this;
     }
 
-    public function addMaptag(Maptag $maptag)
+    public function addFile(File $file)
     {
-        if (!$this->maptags->contains($maptag)) {
-            $this->maptags->add($maptag);
-            $maptag->setTag($this);
+        if ($this->files->contains($file)) {
+            return;
         }
-
-        return $this;
+        $this->files->add($file);
+        $file->addTag($this);
     }
 
-    public function removeMaptag(Maptag $maptag)
+    public function removeFile(File $file)
     {
-        if ($this->maptags->contains($maptag)) {
-            $this->maptags->removeElement($maptag);
-            $maptag->setTag(null);
+        if (!$this->files->contains($file)) {
+            return;
         }
-
-        return $this;
+        $this->files->removeElement($file);
+        $file->removeTag($this);
     }
 
 }

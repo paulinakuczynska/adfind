@@ -3,12 +3,15 @@
 namespace App\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\EntityRepository;
+
 /**
  * File
  *
- * @ORM\Table(name="File", indexes={@ORM\Index(name="subcategory_id", columns={"subcategory_id"})})
+ * @ORM\Table(name="File",
+ *     uniqueConstraints={@ORM\UniqueConstraint(name="name_hash", columns={"name_hash"})},
+ *     indexes={@ORM\Index(name="category_id", columns={"category_id"})})
  * @ORM\Entity
  */
 class File
@@ -16,7 +19,7 @@ class File
     /**
      * @var int
      *
-     * @ORM\Column(name="id", type="integer", nullable=false)
+     * @ORM\Column(name="id", type="integer", nullable=false, options={"unsigned"=true})
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
@@ -24,53 +27,51 @@ class File
 
     /**
      * @var string
-     * @ORM\Column(name="name_add", type="string", length=255, nullable=false)
-     */
-    private $nameAdd;
-
-    /**
-     * @var string|null
-     * @ORM\Column(name="name_view", type="string", length=255, nullable=true)
-     */
-    private $nameView;
-
-    /**
-     * @var string
-     * @ORM\Column(name="name_hash", type="string", length=255, nullable=false)
+     * @ORM\Column(name="name_hash", type="string", length=32, nullable=false, options={"fixed"=true})
      */
     private $nameHash;
 
     /**
-     * @var \Subcategory
-     * @ORM\ManyToOne(targetEntity="App\Entity\Subcategory", inversedBy="files")
+     * @var string|null
+     * @ORM\Column(name="name_add", type="string", length=255, nullable=true)
      */
-    private $subcategory;
+    private $nameAdd;
 
     /**
-     * @var \Maptag
-     * @ORM\OneToMany(targetEntity="App\Entity\Maptag", mappedBy="file", cascade={"persist", "remove"}, orphanRemoval=TRUE)
+     * @var string
+     * @ORM\Column(name="name_view", type="string", length=255, nullable=false)
      */
-    private $maptags;
+    private $nameView;
 
     /**
-     * @var \Mapformat
-     * @ORM\OneToMany(targetEntity="App\Entity\Mapformat", mappedBy="file", cascade={"persist", "remove"}, orphanRemoval=TRUE)
+     * @var \Category
+     * @ORM\ManyToOne(targetEntity="App\Entity\Category", inversedBy="files")
      */
-    private $mapformats;
+    private $category;
 
-    public function __constructTag()
-    {
-        $this->maptags = new ArrayCollection();
-    }
+    /**
+     * @var \Tag
+     * @ORM\ManyToMany(targetEntity="App\Entity\Tag", inversedBy="files")
+     * @JoinTable(
+     *     name="MapTag",
+     *     joinColumns={@ORM\JoinColumn(name="file_id", referencedColumnName="id", nullable=false)},
+     *     inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=false)})
+     */
+    private $tags;
 
-    public function __constructFormat()
+    public function __construct()
     {
-        $this->mapformats = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getNameHash(): ?string
+    {
+        return $this->nameHash;
     }
 
     public function getNameAdd(): ?string
@@ -83,44 +84,21 @@ class File
         return $this->nameView;
     }
 
-    public function getNameHash(): ?string
+    public function getCategory(): ?Category
     {
-        return $this->nameHash;
+        return $this->category;
     }
 
-    public function getSubcategory(): ?Subcategory
+    public function getTag(): Collection
     {
-        return $this->subcategory;
+        return $this->tags;
     }
 
-    public function getMaptags(): Collection
+    public function setNameHash(string $nameHash): self
     {
-        return $this->maptags;
-    }
+        $this->nameHash = $nameHash;
 
-    public function getMapformats(): Collection
-    {
-        return $this->mapformats;
-    }
-
-    public function getTags()
-    {
-        return array_map(
-            function ($maptag) {
-                return $maptag->getTags();
-            },
-            $this->maptags->toArray()
-        );
-    }
-
-    public function getFormats()
-    {
-        return array_map(
-            function ($mapformat) {
-                return $mapformat->getFormats();
-            },
-            $this->mapformats->toArray()
-        );
+        return $this;
     }
 
     public function setNameAdd(string $nameAdd): self
@@ -137,58 +115,29 @@ class File
         return $this;
     }
 
-    public function setNameHash(string $nameHash): self
+    public function setCategory(?Category $category): self
     {
-        $this->nameHash = $nameHash;
+        $this->category = $category;
 
         return $this;
     }
 
-    public function setSubcategory(?Subcategory $subcategory): self
+    public function addTag(Tag $tag)
     {
-        $this->subcategory = $subcategory;
-
-        return $this;
-    }
-
-    public function addMaptag(Maptag $maptag)
-    {
-        if (!$this->maptags->contains($maptag)) {
-            $this->maptags->add($maptag);
-            $maptag->setTag($this);
+        if ($this->tags->contains($tag)) {
+            return;
         }
-
-        return $this;
+        $this->tags->add($tag);
+        $tag->addFile($this);
     }
 
-    public function addMapformat(Mapformat $mapformat)
+    public function removeTag(Tag $tag)
     {
-        if (!$this->mapformats->contains($mapformat)) {
-            $this->mapformats->add($mapformat);
-            $mapformat->setFormat($this);
+        if (!$this->tags->contains($tag)) {
+            return;
         }
-
-        return $this;
-    }
-
-    public function removeMaptag(Maptag $maptag)
-    {
-        if ($this->maptags->contains($maptag)) {
-            $this->maptags->removeElement($maptag);
-            $maptag->setTag(null);
-        }
-
-        return $this;
-    }
-
-    public function removeMapformat(Mapformat $mapformat)
-    {
-        if ($this->mapformats->contains($mapformat)) {
-            $this->mapformats->removeElement($mapformat);
-            $mapformat->setFormat(null);
-        }
-
-        return $this;
+        $this->tags->removeElement($tag);
+        $tag->removeFile($this);
     }
 
 }

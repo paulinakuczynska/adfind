@@ -17,7 +17,7 @@ class Category
     /**
      * @var int
      *
-     * @ORM\Column(name="id", type="integer", nullable=false)
+     * @ORM\Column(name="id", type="integer", nullable=false, options={"unsigned"=true})
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
@@ -25,16 +25,26 @@ class Category
 
     /**
      * @var string
-     * @ORM\Column(name="name", type="string", length=255, nullable=false)
+     * @ORM\Column(name="name", type="string", length=50, nullable=false)
      */
     private $name;
 
     /**
-     * @var int
-     * @ORM\OneToMany(targetEntity="App\Entity\Subcategory", mappedBy="category")
+     * @var int|null
+     * @ORM\Column(name="parent_id", type="integer", nullable=true)
      */
+    private $parentId;
 
-    private $subcategories;
+    /**
+     * @var \File
+     * @ORM\OneToMany(targetEntity="App\Entity\File", mappedBy="category", orphanRemoval=true, fetch="EXTRA_LAZY")
+     */
+    private $files;
+
+    public function __construct()
+    {
+        $this->files = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -46,6 +56,16 @@ class Category
         return $this->name;
     }
 
+    public function getParentId(): ?int
+    {
+        return $this->parentId;
+    }
+
+    public function getFiles(): Collection
+    {
+        return $this->files;
+    }
+
     public function setName(string $name): self
     {
         $this->name = $name;
@@ -53,15 +73,33 @@ class Category
         return $this;
     }
 
-    public function __construct()
+    public function setParentId(int $parentId): self
     {
-        $this->subcategories = new ArrayCollection();
+        $this->parentId = $parentId;
+
+        return $this;
     }
 
-    public function getSubcategories(): Collection
+    public function addFile(File $file): self
     {
-        return $this->subcategories;
+        if (!$this->files->contains($file)) {
+            $this->files[] = $file;
+            $file->setCategory($this);
+        }
+
+        return $this;
     }
 
+    public function removeFile(File $file): self
+    {
+        if ($this->files->contains($file)) {
+            $this->files->removeElement($file);
+            if ($file->getCategory() === $this) {
+                $file->setCategory(null);
+            }
+        }
+
+        return $this;
+    }
 
 }
