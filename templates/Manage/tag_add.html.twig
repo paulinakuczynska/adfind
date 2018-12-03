@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Add tag{% endblock %}
+
+{% form_theme form 'bootstrap_4_layout.html.twig' %}
+
+{% block body %}
+
+    {{ include('Manage/_form_tag.html.twig') }}
+
+    <a href="{{ path('manage_index') }}">Back</a>
+
+{% endblock %}

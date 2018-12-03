@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Table(name="File",
  *     uniqueConstraints={@ORM\UniqueConstraint(name="name_hash", columns={"name_hash"})},
  *     indexes={@ORM\Index(name="category_id", columns={"category_id"})})
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="App\Repository\FileRepository")
  */
 class File
 {
@@ -44,15 +44,15 @@ class File
     private $nameView;
 
     /**
-     * @var \Category
+     * @var Category
      * @ORM\ManyToOne(targetEntity="App\Entity\Category", inversedBy="files")
      */
     private $category;
 
     /**
-     * @var \Tag
+     * @var Collection|Tag[]
      * @ORM\ManyToMany(targetEntity="App\Entity\Tag", inversedBy="files")
-     * @JoinTable(
+     * @ORM\JoinTable(
      *     name="MapTag",
      *     joinColumns={@ORM\JoinColumn(name="file_id", referencedColumnName="id", nullable=false)},
      *     inverseJoinColumns={@ORM\JoinColumn(name="tag_id", referencedColumnName="id", nullable=false)})
@@ -89,7 +89,11 @@ class File
         return $this->category;
     }
 
-    public function getTag(): Collection
+    /**
+     * @return Collection|Tag[]
+     */
+
+    public function getTags(): Collection
     {
         return $this->tags;
     }
@@ -122,22 +126,22 @@ class File
         return $this;
     }
 
-    public function addTag(Tag $tag)
-    {
-        if ($this->tags->contains($tag)) {
-            return;
-        }
-        $this->tags->add($tag);
-        $tag->addFile($this);
-    }
-
-    public function removeTag(Tag $tag)
+    public function addTag(Tag $tag): self
     {
         if (!$this->tags->contains($tag)) {
-            return;
+            $this->tags[] = $tag;
         }
-        $this->tags->removeElement($tag);
-        $tag->removeFile($this);
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): self
+    {
+        if ($this->tags->contains($tag)) {
+            $this->tags->removeElement($tag);
+        }
+
+        return $this;
     }
 
 }

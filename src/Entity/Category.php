@@ -5,12 +5,15 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * Category
  *
  * @ORM\Table(name="Category")
- * @ORM\Entity
+ * @UniqueEntity("name")
+ * @ORM\Entity(repositoryClass="App\Repository\CategoryRepository")
  */
 class Category
 {
@@ -26,17 +29,33 @@ class Category
     /**
      * @var string
      * @ORM\Column(name="name", type="string", length=50, nullable=false)
+     * @Assert\NotBlank(message = "This value cannot be blank.")
+     * @Assert\Regex(
+     *     pattern="/[^\w ]/",
+     *     match = false,
+     *     message = "The name cannot contain special characters except for the low dash.")
+     * @Assert\Length(
+     *     min = 1,
+     *     max = 50,
+     *     maxMessage = "The name cannot contain more than 50 characters.")
      */
     private $name;
 
     /**
-     * @var int|null
-     * @ORM\Column(name="parent_id", type="integer", nullable=true)
+     * @var Category[]
+     * @ORM\ManyToOne(targetEntity="App\Entity\Category", inversedBy="children")
+     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id")
      */
-    private $parentId;
+    private $parent;
 
     /**
-     * @var \File
+     * @var Collection|Category[]
+     * @ORM\OneToMany(targetEntity="App\Entity\Category", mappedBy="parent")
+     */
+    private $children;
+
+    /**
+     * @var Collection|File[]
      * @ORM\OneToMany(targetEntity="App\Entity\File", mappedBy="category", orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $files;
@@ -44,6 +63,7 @@ class Category
     public function __construct()
     {
         $this->files = new ArrayCollection();
+        $this->children = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -56,10 +76,23 @@ class Category
         return $this->name;
     }
 
-    public function getParentId(): ?int
+    public function getParent()
     {
-        return $this->parentId;
+        return $this->parent;
     }
+
+    /**
+     * @return Collection|self[]
+     */
+
+    public function getChildren(): Collection
+    {
+        return $this->children;
+    }
+
+    /**
+     * @return Collection|File[]
+     */
 
     public function getFiles(): Collection
     {
@@ -73,9 +106,31 @@ class Category
         return $this;
     }
 
-    public function setParentId(int $parentId): self
+    public function setParent($parent): self
     {
-        $this->parentId = $parentId;
+        $this->parent = $parent;
+
+        return $this;
+    }
+
+    public function addChild(self $child): self
+    {
+        if (!$this->children->contains($child)) {
+            $this->children[] = $child;
+            $child->setParent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeChild(self $child): self
+    {
+        if ($this->children->contains($child)) {
+            $this->children->removeElement($child);
+            if ($child->getParent() === $this) {
+                $child->setParent(null);
+            }
+        }
 
         return $this;
     }
@@ -100,6 +155,11 @@ class Category
         }
 
         return $this;
+    }
+
+    public function __toString()
+    {
+        return $this->name;
     }
 
 }

@@ -1,0 +1,24 @@
+{% macro categoryTree(category) %}
+    {% import _self as self %}
+    <li style="width: 60px;">
+        {{ category }}
+        {% if category.children %}
+            <ul>
+                {% for child in category.children %}
+                    {{ self.categoryTree(child) }}
+                    <a href="{{ path('manage_edit', {'type': 'category', 'id': child.id}) }}">edit</a>
+                    {{ include('Manage/_delete_category.html.twig') }}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </li>
+{% endmacro %}
+
+
+{% macro tagList(tag) %}
+    <li style="width: 60px;">
+        {{ tag.name }}
+        <a href="{{ path('manage_edit', {'type': 'tag', 'id': tag.id}) }}">edit</a>
+        {{ include('Manage/_delete_tag.html.twig') }}
+    </li>
+{% endmacro %}
