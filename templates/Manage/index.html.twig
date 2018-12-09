@@ -13,7 +13,7 @@
         {% endfor %}
     </ul>
 
-    <a href="{{ path('manage_add', {'type': 'category'}) }}"><button class="btn">Add category</button></a>
+    <a href="{{ path('category_add') }}"><button class="btn">Add category</button></a>
 
 
 
@@ -24,7 +24,7 @@
         {% endfor %}
     </ul>
 
-    <a href="{{ path('manage_add', {'type': 'tag'}) }}"><button class="btn">Add tag</button></a>
+    <a href="{{ path('tag_add') }}"><button class="btn">Add tag</button></a>
 
 {% endblock %}
 

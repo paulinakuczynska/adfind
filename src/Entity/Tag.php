@@ -5,7 +5,6 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
@@ -29,15 +28,6 @@ class Tag
     /**
      * @var string
      * @ORM\Column(name="name", type="string", length=30, nullable=false, unique=true)
-     * @Assert\NotBlank(message = "This value cannot be blank.")
-     * @Assert\Regex(
-     *     pattern="/[^\w ]/",
-     *     match = false,
-     *     message = "The name cannot contain special characters except for the low dash.")
-     * @Assert\Length(
-     *     min = 1,
-     *     max = 30,
-     *     maxMessage = "The name cannot contain more than 30 characters.")
      */
     private $name;
 

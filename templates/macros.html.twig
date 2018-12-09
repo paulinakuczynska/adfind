@@ -6,7 +6,8 @@
             <ul>
                 {% for child in category.children %}
                     {{ self.categoryTree(child) }}
-                    <a href="{{ path('manage_edit', {'type': 'category', 'id': child.id}) }}">edit</a>
+                    <a href="{{ path('category_edit', {'id': child.id}) }}">edit</a>
+
                     {{ include('Manage/_delete_category.html.twig') }}
                 {% endfor %}
             </ul>
@@ -18,7 +19,7 @@
 {% macro tagList(tag) %}
     <li style="width: 60px;">
         {{ tag.name }}
-        <a href="{{ path('manage_edit', {'type': 'tag', 'id': tag.id}) }}">edit</a>
+        <a href="{{ path('tag_edit', {'id': tag.id}) }}">edit</a>
         {{ include('Manage/_delete_tag.html.twig') }}
     </li>
 {% endmacro %}

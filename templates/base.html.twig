@@ -31,6 +31,9 @@
                     </li>
                 </ul>
             </nav>
+
+            {{ include('Manage/flashes.html.twig') }}
+
         {% block body %}{% endblock %}
         </div>
             {% block javascripts %}{% endblock %}
