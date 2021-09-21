@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manage{% endblock %}
+
+{% block body %}
+
+    {% from "macros.html.twig" import categoryTree %}
+    <ul>
+        {% for category in categories %}
+            {% if category.parent == null %}
+                {{ categoryTree(category) }}
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <a href="{{ path('category_add') }}"><button class="btn">Add category</button></a>
+
+
+
+    {% from "macros.html.twig" import tagList %}
+    <ul>
+        {% for tag in tags %}
+                {{ tagList(tag) }}
+        {% endfor %}
+    </ul>
+
+    <a href="{{ path('tag_add') }}"><button class="btn">Add tag</button></a>
+
+{% endblock %}
+
